@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> myAdapter;
     SQLiteDatabase myDatabase;
     String selectedMalop = null;
+    String abc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
