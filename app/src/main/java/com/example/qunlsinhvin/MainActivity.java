@@ -83,19 +83,30 @@ public class MainActivity extends AppCompatActivity {
             String malop = edtmalop.getText().toString();
             String tenlop = edttenlop.getText().toString();
             int siso = Integer.parseInt(edtsiso.getText().toString());
-            ContentValues myValue = new ContentValues();
-            myValue.put("malop", malop);
-            myValue.put("tenlop", tenlop);
-            myValue.put("siso", siso);
-            String msg = "";
-            if (myDatabase.insert("tbllop", null, myValue) == -1) {
-                msg = "Thêm bị lỗi! Hãy thử lại.";
+
+            // Kiểm tra nếu malop đã tồn tại trong cơ sở dữ liệu
+            Cursor cursor = myDatabase.rawQuery("SELECT * FROM tbllop WHERE malop = ?", new String[]{malop});
+            if (cursor.moveToFirst()) {
+                // malop đã tồn tại
+                Toast.makeText(MainActivity.this, "Mã lớp đã tồn tại, không thể thêm", Toast.LENGTH_SHORT).show();
             } else {
-                msg = "Thêm thành công";
-                fetchDataAndDisplay(); // Update the ListView after inserting new data
+                // Tiến hành thêm mới
+                ContentValues myValue = new ContentValues();
+                myValue.put("malop", malop);
+                myValue.put("tenlop", tenlop);
+                myValue.put("siso", siso);
+                String msg = "";
+                if (myDatabase.insert("tbllop", null, myValue) == -1) {
+                    msg = "Thêm bị lỗi! Hãy thử lại.";
+                } else {
+                    msg = "Thêm thành công";
+                    fetchDataAndDisplay(); // Cập nhật ListView sau khi thêm mới dữ liệu
+                }
+                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+            cursor.close();
         });
+
 
         btnxoa.setOnClickListener(view -> {
             if (selectedMalop != null) {
@@ -116,25 +127,40 @@ public class MainActivity extends AppCompatActivity {
 
         btnsua.setOnClickListener(view -> {
             if (selectedMalop != null) {
+                String newMalop = edtmalop.getText().toString();
                 String tenlop = edttenlop.getText().toString();
                 int siso = Integer.parseInt(edtsiso.getText().toString());
-                ContentValues myValue = new ContentValues();
-                myValue.put("tenlop", tenlop);
-                myValue.put("siso", siso);
-                int n = myDatabase.update("tbllop", myValue, "malop = ?", new String[]{selectedMalop});
-                String msg = "";
-                if (n == 0) {
-                    msg = "Chỉnh sửa không thành công";
+
+                // Kiểm tra nếu newMalop đã tồn tại trong cơ sở dữ liệu
+                Cursor cursor = myDatabase.rawQuery("SELECT * FROM tbllop WHERE malop = ?", new String[]{newMalop});
+                if (cursor.moveToFirst() && !newMalop.equals(selectedMalop)) {
+                    // malop đã tồn tại và không phải là cái đang được chọn
+                    Toast.makeText(MainActivity.this, "Mã lớp đã tồn tại, chỉnh sửa không thành công", Toast.LENGTH_SHORT).show();
                 } else {
-                    msg = n + " chỉnh sửa thành công";
-                    fetchDataAndDisplay(); // Update the ListView after updating data
-                    clearFields();
+                    // Tiến hành cập nhật
+                    ContentValues myValue = new ContentValues();
+                    myValue.put("malop", newMalop);
+                    myValue.put("tenlop", tenlop);
+                    myValue.put("siso", siso);
+
+                    int n = myDatabase.update("tbllop", myValue, "malop = ?", new String[]{selectedMalop});
+                    String msg = "";
+                    if (n == 0) {
+                        msg = "Chỉnh sửa không thành công";
+                    } else {
+                        msg = n + " chỉnh sửa thành công";
+                        fetchDataAndDisplay(); // Cập nhật ListView sau khi cập nhật dữ liệu
+                        clearFields();
+                    }
+                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                cursor.close();
             } else {
                 Toast.makeText(MainActivity.this, "Vui lòng chọn lớp để chỉnh sửa", Toast.LENGTH_SHORT).show();
             }
         });
+
+
 
     }
 
